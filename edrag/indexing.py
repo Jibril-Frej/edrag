@@ -13,7 +13,7 @@ def update_index(
 
     :param config: configuration dictionary
     :type config: dict
-    :param index: dictionary to store the index. Keys are doc_name with chunk index appended and values are the chunk text
+    :param index: dictionary to store the index.
     :type index: dict
     :param doc_name: name of the document
     :type doc_name: str
@@ -32,13 +32,20 @@ def update_index(
         chunk = doc_text[i : i + chunk_size]
 
         # Update the index
-        chunk_id = f"{doc_name}_{chunk_index}"
-        index[chunk_id] = chunk
+        index[len(index)] = {
+            "file_name": doc_name,
+            "chunk_index": chunk_index,
+            "start_chr": i,
+            "end_chr": i + chunk_size,
+            "text": chunk,
+        }
+
         chunk_index += 1
 
 
 def basic_indexing(config: dict):
-    """Indexes all the documents in the DocumentsDirectory and saves the index in the IndexFile.
+    """Indexes all the documents in the DocumentsDirectory and saves the index
+    in the IndexFile.
 
     :param config: configuration dictionary
     :type config: dict
@@ -66,11 +73,13 @@ def basic_indexing(config: dict):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", type=str, default="configs/indexing.json")
+    parser.add_argument("--config", type=str, default="configs/config.json")
     args = parser.parse_args()
     config = args.config
 
     with open(config, "r") as f:
         config = json.load(f)
+
+    config = config["Indexing"]
 
     basic_indexing(config)

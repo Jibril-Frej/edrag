@@ -1,6 +1,0 @@
-{
-    "DocumentsDirectory": "data/AICC_2023/Documents",
-    "IndexFile": "data/AICC_2023/index.json",
-    "ChunkSize": 2048,
-    "ChunkOverlap": 128
-}

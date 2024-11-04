@@ -1,0 +1,25 @@
+{
+    "Indexing": {
+        "DocumentsDirectory": "data/AICC_2023/Documents",
+        "IndexFile": "data/AICC_2023/index.json",
+        "ChunkSize": 1024,
+        "ChunkOverlap": 64
+    },
+    "Embed": {
+        "IndexFile": "data/AICC_2023/index.json",
+        "ModelName": "paraphrase-albert-small-v2",
+        "EmbeddingFile": "data/AICC_2023/embeddings.csv",
+        "BatchSize": 32
+    },
+    "Retrieval": {
+        "EmbeddingFile": "data/AICC_2023/embeddings.csv",
+        "ModelName": "paraphrase-albert-small-v2",
+        "BatchSize": 32,
+        "TopK": 5
+    },
+    "Generation": {
+        "PromptPath": "prompts/AICC_2023.json",
+        "BatchSize": 32,
+        "TopK": 5
+    }
+}
