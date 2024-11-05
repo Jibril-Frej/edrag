@@ -39,7 +39,7 @@ def retrieve(config: dict, query: str) -> np.ndarray:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", type=str, default="configs/config.json")
+    parser.add_argument("--config", type=str, default="configs/AICC_2023.json")
     args = parser.parse_args()
     config = args.config
 

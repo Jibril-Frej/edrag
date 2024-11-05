@@ -1,6 +1,6 @@
 {
     "Indexing": {
-        "DocumentsDirectory": "data/AICC_2023/Documents",
+        "DocumentsDirectory": "data/AICC_2023/documents",
         "IndexFile": "data/AICC_2023/index.json",
         "ChunkSize": 1024,
         "ChunkOverlap": 64
@@ -18,8 +18,9 @@
         "TopK": 5
     },
     "Generation": {
-        "PromptPath": "prompts/AICC_2023.json",
-        "BatchSize": 32,
-        "TopK": 5
+        "IndexFile": "data/AICC_2023/index.json",
+        "PromptPath": "prompts/AICC_2023/generation.json",
+        "ModelName": "gpt-4o-mini",
+        "Temperature": 0
     }
 }
