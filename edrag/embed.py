@@ -12,6 +12,9 @@ def embed(config: dict):
     :param config: configuration dictionary
     :type config: dic
     """
+
+    config = config["Embed"]
+
     # Read the index
     with open(config["IndexFile"], "r") as f:
         index = json.load(f)
@@ -31,13 +34,15 @@ def embed(config: dict):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", type=str, default="configs/AICC_2023.json")
+    parser.add_argument(
+        "--config",
+        type=str,
+        default="configs/AICC_2023.json",
+    )  # type: ignore
     args = parser.parse_args()
     config = args.config
 
     with open(config, "r") as f:
         config = json.load(f)
-
-    config = config["Embed"]
 
     embed(config)

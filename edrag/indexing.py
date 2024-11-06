@@ -50,6 +50,9 @@ def basic_indexing(config: dict):
     :param config: configuration dictionary
     :type config: dict
     """
+
+    config = config["Indexing"]
+
     index = dict()
 
     # Get the list of documents
@@ -79,7 +82,5 @@ if __name__ == "__main__":
 
     with open(config, "r") as f:
         config = json.load(f)
-
-    config = config["Indexing"]
 
     basic_indexing(config)

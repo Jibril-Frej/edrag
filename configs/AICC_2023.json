@@ -19,8 +19,18 @@
     },
     "Generation": {
         "IndexFile": "data/AICC_2023/index.json",
-        "PromptPath": "prompts/AICC_2023/generation.json",
+        "PromptPath": "prompts/AICC_2023/generation.yaml",
         "ModelName": "gpt-4o-mini",
         "Temperature": 0
+    },
+    "Evaluation": {
+        "QSFile": "data/AICC_2023/questions_solutions.json",
+        "PromptPath": "prompts/AICC_2023/evaluation.yaml",
+        "ResultsFile": "data/AICC_2023/results.json",
+        "MetricsFile": "data/AICC_2023/metrics.json",
+        "RetrievalMetricsFile": "data/AICC_2023/retrieval_metrics.json",
+        "ModelName": "gpt-4o-mini",
+        "Temperature": 0,
+        "K": 5
     }
 }

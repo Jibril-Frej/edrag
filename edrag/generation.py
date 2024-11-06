@@ -1,8 +1,11 @@
 import json
 import argparse
+import yaml
+
+import numpy as np
 from openai import OpenAI
 
-from retrieval import retrieve
+from retrieval import retrieve, retrieve_all
 
 
 def make_messages(config: dict, query: str, documents: list) -> list:
@@ -20,7 +23,7 @@ def make_messages(config: dict, query: str, documents: list) -> list:
 
     # Read the system prompt from the configuration
     with open(config["PromptPath"], "r") as f:
-        system_prompt = json.load(f)
+        system_prompt = yaml.safe_load(f)
 
     messages = [system_prompt]
 
@@ -77,9 +80,58 @@ def generate(config: dict, query: str) -> str | None:
     return response
 
 
+def generate_all(config: dict, queries: list) -> tuple[list, np.ndarray]:
+    """Generate responses to a list of queries.
+
+    :param config: configuration dictionary
+    :type config: dict
+    :param queries: list of queries to generate responses to
+    :type queries: list
+    :return: list of generated responses
+    :rtype: list
+    """
+
+    # Retrieve the indices of the most similar documents for each query
+    top_k = retrieve_all(config["Retrieval"], queries)
+
+    config = config["Generation"]
+
+    # Load the documents
+    with open(config["IndexFile"], "r") as f:
+        index = json.load(f)
+
+    responses = []
+
+    for query, top_k_documents in zip(queries, top_k):
+        # Get the most similar documents
+        documents = [index[str(i)] for i in top_k_documents]
+
+        # Generate the messages
+        messages = make_messages(config, query, documents)
+
+        # Generate the response
+        client = OpenAI()
+
+        completion = client.chat.completions.create(
+            model=config["ModelName"],
+            messages=messages,
+            temperature=config["Temperature"],
+        )
+
+        response = completion.choices[0].message.content
+
+        responses.append(response)
+
+    return responses, top_k
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", type=str, default="configs/AICC_2023.json")
+    parser.add_argument(
+        "--config",
+        type=str,
+        default="configs/AICC_2023.json",
+    )  # type: ignore
     args = parser.parse_args()
     config = args.config
 
