@@ -1,11 +1,29 @@
 # edrag
 
-A simple RAG system for question qnswering in the educational context
+A minimalistic RAG system for question qnswering in the educational context.
+
+Work in progress
+
+## Installation
+
+We recommend using a conda environment with python 3.12
+
+```bash
+conda create --name edrag python=3.12
+```
+
+Install the requirements using the requirements.txt file
+
+```bash
+pip install -r requirements.txt
+```
+
+## Usage
+
+TBD
 
 ## TODOs
 
-- Finish the basic pipeline
-  - Make synthetic queries
-  - Add evaluation
-- Add Faiss for faster Retrieval
-- Add context of the documents in the prompt
+- Add hydra to manage configs
+- Complete Usage section of Readme
+- Use Faiss for faster Retrieval
