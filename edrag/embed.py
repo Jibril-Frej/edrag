@@ -1,48 +1,39 @@
-import argparse
 import json
+import logging
 
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
+from omegaconf import DictConfig
 
-def embed(config: dict):
+
+log = logging.getLogger(__name__)
+
+
+def embed(config: DictConfig):
     """Embed the text chunks from the index using SentenceTransformer and save
     the embeddings in a csv file.
 
     :param config: configuration dictionary
-    :type config: dic
+    :type config: DictConfig
     """
 
-    config = config["Embed"]
-
     # Read the index
-    with open(config["IndexFile"], "r") as f:
+    with open(config.IndexFile, "r") as f:
         index = json.load(f)
 
     # Load the embedding model and tokenizer
-    model = SentenceTransformer(config["ModelName"])
+    model = SentenceTransformer(config.Embedding.Model)
 
     # Get the text chunks in the correct order in a list
     chunks = [index[str(i)]["text"] for i in range(len(index))]
 
     # Embed the chunks
-    embeddings = model.encode(chunks, batch_size=config["BatchSize"])
+    embeddings = model.encode(chunks, batch_size=config.Embedding.BatchSize)
 
-    # Save the embeddings
-    np.savetxt(config["EmbeddingFile"], embeddings, delimiter=",")
+    log.info(f"Embeddings of shape {embeddings.shape} computed")
 
+    # Save the embeddings as a csv file with savetxt for readability
+    np.savetxt(config.EmbeddingFile, embeddings, delimiter=",")
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--config",
-        type=str,
-        default="configs/AICC_2023.json",
-    )  # type: ignore
-    args = parser.parse_args()
-    config = args.config
-
-    with open(config, "r") as f:
-        config = json.load(f)
-
-    embed(config)
+    log.info(f"Embeddings saved to {config.EmbeddingFile}")

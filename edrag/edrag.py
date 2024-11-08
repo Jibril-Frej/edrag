@@ -1,5 +1,7 @@
-import argparse
-import json
+import logging
+
+import hydra
+from omegaconf import DictConfig
 
 from indexing import basic_indexing
 from embed import embed
@@ -7,18 +9,17 @@ from evaluation import evaluate_all
 from metrics import compute_all_metrics
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--config_file",
-        type=str,
-        default="configs/AICC_2023.json",
-    )  # type: ignore
-    args = parser.parse_args()
+log = logging.getLogger(__name__)
 
-    with open(args.config_file, "r") as f:
-        config = json.load(f)
 
+@hydra.main(
+    version_base=None,
+    config_path="../configs/",
+    config_name="AICC_2023",
+)
+def main(config: DictConfig):
+
+    log.info("Starting the eDRAG pipeline")
     basic_indexing(config)
     embed(config)
     evaluate_all(config)

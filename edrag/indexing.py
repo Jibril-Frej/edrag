@@ -1,10 +1,15 @@
 import os
-import argparse
 import json
+import logging
+
+from omegaconf import DictConfig
+from hydra.utils import get_original_cwd
+
+log = logging.getLogger(__name__)
 
 
 def update_index(
-    config: dict,
+    config: DictConfig,
     index: dict,
     doc_name: str,
     doc_text: str,
@@ -12,7 +17,7 @@ def update_index(
     """Reads a document and updates the index with the chunks of the document.
 
     :param config: configuration dictionary
-    :type config: dict
+    :type config: DictConfig
     :param index: dictionary to store the index.
     :type index: dict
     :param doc_name: name of the document
@@ -20,8 +25,8 @@ def update_index(
     :param doc_text: text of the document
     :type doc_text: str
     """
-    chunk_size = config["ChunkSize"]
-    chunk_overlap = config["ChunkOverlap"]
+    chunk_size = config.ChunkSize
+    chunk_overlap = config.ChunkOverlap
 
     chunk_index = 0
 
@@ -43,24 +48,26 @@ def update_index(
         chunk_index += 1
 
 
-def basic_indexing(config: dict):
+def basic_indexing(config: DictConfig):
     """Indexes all the documents in the DocumentsDirectory and saves the index
     in the IndexFile.
 
     :param config: configuration dictionary
-    :type config: dict
+    :type config: DictConfig
     """
-
-    config = config["Indexing"]
 
     index = dict()
 
     # Get the list of documents
-    docs = os.listdir(config["DocumentsDirectory"])
+    docdir = os.path.join(get_original_cwd(), config.DocumentsDirectory)
+
+    docs = os.listdir(docdir)
+
+    log.info(f"Indexing {len(docs)} documents from {docdir}")
 
     # Loop through all the documents
     for doc_name in docs:
-        doc_path = os.path.join(config["DocumentsDirectory"], doc_name)
+        doc_path = os.path.join(docdir, doc_name)
 
         # Read the document
         with open(doc_path, "r") as f:
@@ -69,18 +76,10 @@ def basic_indexing(config: dict):
         # Update the index
         update_index(config, index, doc_name, doc_text)
 
+    log.info(f"Indexed {len(index)} chunks")
+
     # Save the index
-    with open(config["IndexFile"], "w") as f:
+    log.info(f"Saving the index to {config.IndexFile}")
+
+    with open(config.IndexFile, "w") as f:
         json.dump(index, f)
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--config", type=str, default="configs/AICC_2023.json")
-    args = parser.parse_args()
-    config = args.config
-
-    with open(config, "r") as f:
-        config = json.load(f)
-
-    basic_indexing(config)

@@ -1,7 +1,10 @@
 import json
-import argparse
+import logging
 
 import numpy as np
+from omegaconf import DictConfig
+
+log = logging.getLogger(__name__)
 
 
 def compute_hit_rate(retrieved: list, relevant: list, k: int) -> float:
@@ -73,13 +76,13 @@ def compute_generation_metrics(results: dict) -> dict:
 
 
 def compute_retrieval_metrics(
-    config: dict, results: dict, metrics: dict
+    config: DictConfig, results: dict, metrics: dict
 ) -> dict:
     """Compute the retrieval metrics and update the metrics dictionary with the
     average and std of the retrieval metrics.
 
     :param config: configuration dictionary
-    :type config: dict
+    :type config: DictConfig
     :param results: results dictionary
     :type results: dict
     :param metrics: metrics dictionary
@@ -90,7 +93,7 @@ def compute_retrieval_metrics(
     retrieval_metrics = {}
 
     metrics["retrieval"] = {}
-    k = config["Evaluation"]["K"]
+    k = config.Evaluation.K
 
     for qs_id, qs in results.items():
         retrieved_docs = qs["retrieved_docs"]
@@ -108,45 +111,31 @@ def compute_retrieval_metrics(
     return retrieval_metrics
 
 
-def compute_all_metrics(config: dict) -> None:
+def compute_all_metrics(config: DictConfig) -> None:
     """Compute all the metrics.
 
     :param config: configuration dictionary
-    :type config: dict
+    :type config: DictConfig
     """
-    with open(config["Evaluation"]["ResultsFile"], "r") as f:
+    with open(config.ResultsFile, "r") as f:
         results = json.load(f)
+
+    log.info(f"Loaded results from {config.ResultsFile}")
 
     metrics = compute_generation_metrics(results)
 
+    log.info("Generation metrics computed")
+
     retrieval_metrics = compute_retrieval_metrics(config, results, metrics)
 
-    with open(config["Evaluation"]["MetricsFile"], "w") as f:
+    log.info("Retrieval metrics computed")
+
+    with open(config.MetricsFile, "w") as f:
         json.dump(metrics, f, indent=4)
 
-    with open(config["Evaluation"]["RetrievalMetricsFile"], "w") as f:
+    log.info(f"Metrics saved to {config.MetricsFile}")
+
+    with open(config.RetrievalMetricsFile, "w") as f:
         json.dump(retrieval_metrics, f, indent=4)
 
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--config",
-        type=str,
-        default="configs/AICC_2023.json",
-    )  # type: ignore
-    args = parser.parse_args()
-    config = args.config
-
-    with open(config, "r") as f:
-        config = json.load(f)
-
-    with open(config["Evaluation"]["ResultsFile"], "r") as f:
-        results = json.load(f)
-
-    metrics = compute_generation_metrics(results)
-
-    retrieval_metrics = compute_retrieval_metrics(config, results, metrics)
-
-    with open(config["Evaluation"]["MetricsFile"], "w") as f:
-        json.dump(metrics, f, indent=4)
+    log.info(f"Retrieval metrics saved to {config.RetrievalMetricsFile}")

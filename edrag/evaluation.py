@@ -1,28 +1,23 @@
-import argparse
+import os
 import json
-import yaml
+import logging
 
 from openai import OpenAI
+from omegaconf import DictConfig
+from hydra.utils import get_original_cwd
 
-from generation import generate_all
+from generation import generate
 
 
-def evaluate_answer(config: dict, solution: str, answer: str) -> str | None:
-    """Evaluate the answer.
+log = logging.getLogger(__name__)
 
-    :param config: configuration dictionary
-    :type config: dict
-    :param solution: correct answer
-    :type solution: str
-    :param answer: generated answer
-    :type answer: str
-    :return: evaluation result
-    :rtype: str
-    """
+
+def make_evaluation_messages(
+    config: DictConfig, solution: str, answer: str
+) -> list:
 
     # Read the evaluation prompt from the configuration
-    with open(config["PromptPath"], "r") as f:
-        evaluation_prompt = yaml.safe_load(f)
+    evaluation_prompt = {"role": "system", "content": config.Evaluation.Prompt}
 
     messages = [evaluation_prompt]
 
@@ -32,13 +27,34 @@ def evaluate_answer(config: dict, solution: str, answer: str) -> str | None:
 
     messages.append({"role": "user", "content": content})
 
+    return messages
+
+
+def evaluate_answer(
+    config: DictConfig, solution: str, answer: str
+) -> str | None:
+    """Evaluate the answer.
+
+    :param config: configuration dictionary
+    :type config: DictConfig
+    :param solution: correct answer
+    :type solution: str
+    :param answer: generated answer
+    :type answer: str
+    :return: evaluation result
+    :rtype: str
+    """
+
+    # Generate the evaluation prompt
+    messages = make_evaluation_messages(config, solution, answer)
+
     client = OpenAI()
 
     # Generate the evaluation
     completion = client.chat.completions.create(
-        model=config["ModelName"],
+        model=config.Evaluation.Model,
         messages=messages,
-        temperature=config["Temperature"],
+        temperature=config.Evaluation.Temperature,
     )
 
     response = completion.choices[0].message.content
@@ -46,27 +62,33 @@ def evaluate_answer(config: dict, solution: str, answer: str) -> str | None:
     return response
 
 
-def evaluate_all(config: dict) -> None:
+def evaluate_all(config: DictConfig) -> None:
     """Evaluate the RAG system.
 
     :param config: configuration dictionary
-    :type config: dict
+    :type config: DictConfig
     """
 
-    eval_config = config["Evaluation"]
-
     # Load the queries
-    with open(eval_config["QSFile"], "r") as f:
+    query_path = os.path.join(get_original_cwd(), config.QSFile)
+    with open(query_path, "r") as f:
         questions_solutions = json.load(f)
 
+    log.info(
+        f"Loaded {len(questions_solutions)} questions and solutions"
+        f"from {query_path}"
+    )
+
     # Get only the fist k queries
-    k = 10
+    k = 1
     questions_solutions = {i: questions_solutions[str(i)] for i in range(k)}
 
     all_questions = [questions_solutions[i]["question"] for i in range(k)]
-    all_answers, top_k = generate_all(config, all_questions)
+    all_answers, top_k = generate(config, all_questions)
 
     results = {}
+
+    log.info(f"Generating answers to {len(all_questions)} questions")
 
     # Generate and evaluate the answers
     for qs_id, qs in questions_solutions.items():
@@ -85,24 +107,11 @@ def evaluate_all(config: dict) -> None:
         if answer is None:
             label = "-1"
         else:
-            label = evaluate_answer(eval_config, solution, answer)
+            label = evaluate_answer(config, solution, answer)
         results[qs_id]["label"] = label
+        log.info(f"Question {qs_id} evaluated as {label}")
 
-    with open(eval_config["ResultsFile"], "w") as f:
+    with open(config.ResultsFile, "w") as f:
         json.dump(results, f, indent=4)
 
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--config",
-        type=str,
-        default="configs/AICC_2023.json",
-    )  # type: ignore
-    args = parser.parse_args()
-    config = args.config
-
-    with open(config, "r") as f:
-        config = json.load(f)
-
-    evaluate_all(config)
+    log.info(f"Results saved to {config.ResultsFile}")

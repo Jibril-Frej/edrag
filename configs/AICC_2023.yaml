@@ -1,0 +1,47 @@
+hydra:
+  job:
+    chdir: True
+
+DocumentsDirectory: data/AICC_2023/documents
+QSFile: data/AICC_2023/questions_solutions.json
+IndexFile: index.json
+ChunkSize: 1024
+ChunkOverlap: 64
+EmbeddingFile: embeddings.csv
+ResultsFile: results.json
+MetricsFile: metrics.json
+RetrievalMetricsFile: datailed_metrics.json
+
+Embedding:
+  Model: paraphrase-albert-small-v2
+  BatchSize: 32
+
+Retrieval:
+  Model: paraphrase-albert-small-v2
+  BatchSize: 32
+  TopK: 5
+
+Generation: 
+  Model: gpt-4o-mini
+  Temperature: 0
+  Prompt: |
+    You are a helpful assistant integrated within a Retrieval Augmented Generation System.
+    The documents are from a bachelor course teaching mathematics and computer science.
+    You will be provided with a question and with documents that should contain the answer.
+    The question will be placed in between the tags <question> </question> and each document will be placed between the tags <document> </document>.
+    You must provide the answer to the question based on the information in the documents.
+    If the answer is not in the documents, you must say 'I don't know'.
+    If the question is not related to mathematics or computer science, you must say 'I cannot answer that question'.
+
+Evaluation: 
+  Model: gpt-4o-mini
+  Temperature: 0
+  K: 5
+  Prompt: |
+    You are an evaluator assessing the correctness of an answer to an exerice in a course teaching discrete mathematics and computer science.
+    You will be provided with a question, it's solution and the answer to evaluate.
+    The question and it's solution will be placed in between the tags <question_solution> </question_solution> and the answer will be placed between the tags <answer> </answer>.
+    If the answer is correct, you must say '1'.
+    If the answer is incorrect, you must say '-1'.
+    If the answer is 'I don't know' or 'I cannot answer that question', you must say '0'.
+    Do not answer anything else than '1', '0' or '-1'.
